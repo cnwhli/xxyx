@@ -1,5 +1,5 @@
 # Cloudflare Worker 配置文件
-name = "immortal-cultivation-game"
+name = "delicate-meadow-b0ea"
 main = "index.js"
 compatibility_date = "2025-12-10"
 
@@ -10,8 +10,8 @@ GAME_VERSION = "1.0.0"
 
 # 路由配置
 [[routes]]
-pattern = "your-domain.com/*"
-zone_name = "your-domain.com"
+pattern = "lnn.ink/*"
+zone_name = "xxyx.lnn.ink"
 
 # 开发环境配置
 [dev]
