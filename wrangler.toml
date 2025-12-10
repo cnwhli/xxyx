@@ -1,0 +1,36 @@
+# Cloudflare Worker 配置文件
+name = "immortal-cultivation-game"
+main = "index.js"
+compatibility_date = "2025-12-10"
+
+# 环境变量配置
+[vars]
+GAME_NAME = "修仙模拟器"
+GAME_VERSION = "1.0.0"
+
+# 路由配置
+[[routes]]
+pattern = "your-domain.com/*"
+zone_name = "your-domain.com"
+
+# 开发环境配置
+[dev]
+port = 8787
+local_protocol = "https"
+
+# 构建配置
+[build]
+command = ""
+cwd = ""
+watch_dir = ""
+
+# 部署配置
+[deploy]
+bucket = ""
+entry-point = ""
+</think>
+</parameter>
+<index>
+0
+</index>
+</function>

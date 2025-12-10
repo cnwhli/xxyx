@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修仙模拟器</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 统一的 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a365d',
+                        secondary: '#7c3aed',
+                        accent: '#f59e0b',
+                        light: '#f3f4f6',
+                        dark: '#1f2937'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'spin-slow': 'spin 8s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px #fff, 0 0 10px #fff, 0 0 15px #7c3aed, 0 0 20px #7c3aed' },
+                            '100%': { boxShadow: '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #7c3aed, 0 0 40px #7c3aed' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            }
+            .text-shadow-lg {
+                text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+            .bg-gradient-xuanhuan {
+                background: linear-gradient(to bottom, #1a365d, #0f172a);
+            }
+            .bg-gradient-realm {
+                background: linear-gradient(to right, #7c3aed, #f59e0b);
+            }
+            .bg-glass {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .scrollbar-hidden::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hidden {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .realm-glow {
+                box-shadow: 0 0 15px rgba(124, 58, 237, 0.7);
+            }
+            .突破成功 {
+                color: #10b981;
+                text-shadow: 0 0 10px #10b981;
+            }
+            .突破失败 {
+                color: #ef4444;
+                text-shadow: 0 0 10px #ef4444;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-xuanhuan min-h-screen text-light overflow-x-hidden">
+    <!-- 背景动画效果 -->
+    <div class="fixed inset-0 z-0">
+        <div class="absolute inset-0 bg-[url('https://p3-doubao-search-sign.byteimg.com/labis/cba2df49a253019dab806a9823e9c3d4~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1780895882&x-signature=77pOAbHtC3%2F%2BSpmWqb2%2FnVAzbdI%3D')] bg-cover bg-center opacity-30"></div>
+        <div class="absolute inset-0 bg-black opacity-50"></div>
+        <!-- 星星动画 -->
+        <div id="stars" class="absolute inset-0"></div>
+    </div>
+
+    <!-- 游戏容器 -->
+    <div class="relative z-10 container mx-auto px-4 py-8">
+        <!-- 开始界面 -->
+        <div id="start-screen" class="flex flex-col items-center justify-center min-h-[80vh]">
+            <h1 class="text-5xl md:text-7xl font-bold text-center mb-8 text-shadow-lg animate-glow">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-yellow-400">修仙模拟器</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-center mb-12 max-w-2xl text-shadow">
+                踏上修仙之路，历经千劫万难，终成大道
+            </p>
+            <div class="flex flex-col md:flex-row gap-6">
+                <button id="new-game-btn" class="px-8 py-4 bg-secondary hover:bg-purple-700 text-white rounded-lg text-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                    开始新游戏
+                </button>
+                <button id="load-game-btn" class="px-8 py-4 bg-glass hover:bg-opacity-30 text-white rounded-lg text-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                    继续游戏
+                </button>
+            </div>
+        </div>
+
+        <!-- 角色创建界面 -->
+        <div id="character-creation" class="hidden">
+            <div class="bg-glass rounded-xl p-6 mb-8">
+                <h2 class="text-3xl font-bold mb-6 text-center text-shadow">角色创建</h2>
+                
+                <div class="mb-6">
+                    <label for="character-name" class="block text-xl mb-2">姓名</label>
+                    <input type="text" id="character-name" class="w-full bg-dark bg-opacity-50 border border-gray-600 rounded-lg px-4 py-2 text-light focus:outline-none focus:ring-2 focus:ring-secondary" placeholder="请输入角色姓名">
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl mb-4">选择灵根</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div class="spirit-root cursor-pointer bg-dark bg-opacity-50 border border-gray-600 rounded-lg p-4 text-center hover:border-secondary transition-all" data-root="金" data-bonus='{"根骨":2,"体质":1}'>
+                            <div class="text-yellow-400 text-2xl mb-2">⚔️</div>
+                            <div class="font-semibold">金灵根</div>
+                            <div class="text-sm text-gray-400">根骨+2，体质+1</div>
+                        </div>
+                        <div class="spirit-root cursor-pointer bg-dark bg-opacity-50 border border-gray-600 rounded-lg p-4 text-center hover:border-green-500 transition-all" data-root="木" data-bonus='{"体质":2,"福缘":1}'>
+                            <div class="text-green-500 text-2xl mb-2">🌿</div>
+                            <div class="font-semibold">木灵根</div>
+                            <div class="text-sm text-gray-400">体质+2，福缘+1</div>
+                        </div>
+                        <div class="spirit-root cursor-pointer bg-dark bg-opacity-50 border border-gray-600 rounded-lg p-4 text-center hover:border-blue-500 transition-all" data-root="水" data-bonus='{"悟性":2,"福缘":1}'>
+                            <div class="text-blue-500 text-2xl mb-2">🌊</div>
+                            <div class="font-semibold">水灵根</div>
+                            <div class="text-sm text-gray-400">悟性+2，福缘+1</div>
+                        </div>
+                        <div class="spirit-root cursor-pointer bg-dark bg-opacity-50 border border-gray-600 rounded-lg p-4 text-center hover:border-red-500 transition-all" data-root="火" data-bonus='{"灵力":2,"悟性":1}'>
+                            <div class="text-red-500 text-2xl mb-2">🔥</div>
+                            <div class="font-semibold">火灵根</div>
+                            <div class="text-sm text-gray-400">灵力+2，悟性+1</div>
+                        </div>
+                        <div class="spirit-root cursor-pointer bg-dark bg-opacity-50 border border-gray-600 rounded-lg p-4 text-center hover:border-yellow-700 transition-all" data-root="土" data-bonus='{"根骨":1,"体质":2}'>
+                            <div class="text-yellow-700 text-2xl mb-2">🗿</div>
+                            <div class="font-semibold">土灵根</div>
+                            <div class="text-sm text-gray-400">根骨+1，体质+2</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl mb-4">初始属性</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div class="attribute bg-dark bg-opacity-50 border border-gray-600 rounded-lg p-4">
+                            <div class="font-semibold mb-2">根骨</div>
+                            <div class="flex items-center justify-between">
+                                <span id="root-value" class="text-xl">5</span>
+                                <button class="attribute-btn bg-secondary hover:bg-purple-700 text-white rounded-full w-8 h-8 flex items-center justify-center" data-attr="根骨">+</button>
+                            </div>
+                        </div>
+                        <div class="attribute bg-dark bg-opacity-50 border border-gray-600 rounded-lg p-4">
+                            <div class="font-semibold mb-2">悟性</div>
+                            <div class="flex items-center justify-between">
+                                <span id="wisdom-value" class="text-xl">5</span>
+                                <button class="attribute-btn bg-secondary hover:bg-purple-700 text-white rounded-full w-8 h-8 flex items-center justify-center" data-attr="悟性">+</button>
+                            </div>
+                        </div>
+                        <div class="attribute bg-dark bg-opacity-50 border border-gray-600 rounded-lg p-4">
+                            <div class="font-semibold mb-2">福缘</div>
+                            <div class="flex items-center justify-between">
+                                <span id="luck-value" class="text-xl">5</span>
+                                <button class="attribute-btn bg-secondary hover:bg-purple-700 text-white rounded-full w-8 h-8 flex items-center justify-center" data-attr="福缘">+</button>
+                            </div>
+                        </div>
+                        <div class="attribute bg-dark bg-opacity-50 border border-gray-600 rounded-lg p-4">
+                            <div class="font-semibold mb-2">体质</div>
+                            <div class="flex items-center justify-between">
+                                <span id="constitution-value" class="text-xl">5</span>
+                                <button class="attribute-btn bg-secondary hover:bg-purple-700 text-white rounded-full w-8 h-8 flex items-center justify-center" data-attr="体质">+</button>
+                            </div>
+                        </div>
+                        <div class="attribute bg-dark bg-opacity-50 border border-gray-600 rounded-lg p-4">
+                            <div class="font-semibold mb-2">灵力</div>
+                            <div class="flex items-center justify-between">
+                                <span id="spiritualPower-value" class="text-xl">5</span>
+                                <button class="attribute-btn bg-secondary hover:bg-purple-700 text-white rounded-full w-8 h-8 flex items-center justify-center" data-attr="灵力">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <span class="text-lg">剩余点数: </span>
+                        <span id="remaining-points" class="text-xl font-semibold text-yellow-400">10</span>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center">
+                    <button id="start-game-btn" class="px-8 py-4 bg-secondary hover:bg-purple-700 text-white rounded-lg text-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        开始游戏
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主游戏界面 -->
+        <div id="game-screen" class="hidden">
+            <!-- 顶部角色信息栏 -->
+            <div class="bg-glass rounded-xl p-4 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="flex items-center mb-4 md:mb-0">
+                        <div class="w-16 h-16 rounded-full bg-dark border-2 border-secondary overflow-hidden mr-4">
+                            <img id="character-avatar" src="https://p26-doubao-search-sign.byteimg.com/labis/11d74a8206940af194030d5214b3c85d~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1780895882&x-signature=sOg1xQkWUp6OQFQAbwHSFpiBy%2Fs%3D" alt="角色头像" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h2 id="character-name-display" class="text-2xl font-bold text-shadow">无名修士</h2>
+                            <div class="flex items-center">
+                                <span id="realm-display" class="text-lg mr-3">练气一层</span>
+                                <span id="level-display" class="text-sm bg-dark bg-opacity-50 px-2 py-1 rounded">等级: 1</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-center">
+                            <div class="text-sm text-gray-400">灵气</div>
+                            <div class="flex items-center">
+                                <span id="current-qi" class="text-lg">0</span>
+                                <span class="text-gray-400">/</span>
+                                <span id="max-qi" class="text-gray-400">100</span>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-sm text-gray-400">修炼速度</div>
+                            <div id="cultivation-speed" class="text-lg">1</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-sm text-gray-400">突破成功率</div>
+                            <div id="breakthrough-chance" class="text-lg">50%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主要内容区 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 左侧 - 修炼区 -->
+                <div class="bg-glass rounded-xl p-6">
+                    <h3 class="text-2xl font-bold mb-4 text-center">修炼</h3>
+                    <div class="flex justify-center mb-6">
+                        <div class="w-32 h-32 relative">
+                            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/2e9c0cfe3e074a0aa0eeeebcb79a4435~tplv-a9rns2rl98-image.image?rcl=2025121013172585CFF3853ADE9526AB83&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1767935909&x-signature=OZHpZanTfMRELpfIFv8vu0FY4Xc%3D" alt="修炼图标" class="w-full h-full object-contain animate-float">
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <div class="flex justify-between mb-2">
+                            <span>灵气进度</span>
+                            <span id="qi-percentage">0%</span>
+                        </div>
+                        <div class="w-full bg-dark bg-opacity-50 rounded-full h-4 overflow-hidden">
+                            <div id="qi-progress-bar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-full rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col space-y-4">
+                        <button id="cultivate-btn" class="px-6 py-3 bg-secondary hover:bg-purple-700 text-white rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                            开始修炼
+                        </button>
+                        <button id="breakthrough-btn" class="px-6 py-3 bg-accent hover:bg-yellow-600 text-white rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            尝试突破
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 中间 - 属性与状态 -->
+                <div class="bg-glass rounded-xl p-6">
+                    <h3 class="text-2xl font-bold mb-4 text-center">角色属性</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span>根骨</span>
+                            <span id="root-display" class="font-semibold">5</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>悟性</span>
+                            <span id="wisdom-display" class="font-semibold">5</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>福缘</span>
+                            <span id="luck-display" class="font-semibold">5</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>体质</span>
+                            <span id="constitution-display" class="font-semibold">5</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>灵力</span>
+                            <span id="spiritualPower-display" class="font-semibold">5</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <h3 class="text-2xl font-bold mb-4 text-center">修仙境界</h3>
+                        <div class="space-y-2">
+                            <div class="realm-step flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center mr-3 realm-glow">
+                                    <span>1</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">练气</div>
+                                    <div class="text-sm text-gray-400">共10层</div>
+                                </div>
+                            </div>
+                            <div class="realm-step flex items-center opacity-50">
+                                <div class="w-8 h-8 rounded-full bg-dark border border-gray-600 flex items-center justify-center mr-3">
+                                    <span>2</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">筑基</div>
+                                    <div class="text-sm text-gray-400">共3层</div>
+                                </div>
+                            </div>
+                            <div class="realm-step flex items-center opacity-50">
+                                <div class="w-8 h-8 rounded-full bg-dark border border-gray-600 flex items-center justify-center mr-3">
+                                    <span>3</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">金丹</div>
+                                    <div class="text-sm text-gray-400">共9层</div>
+                                </div>
+                            </div>
+                            <div class="realm-step flex items-center opacity-50">
+                                <div class="w-8 h-8 rounded-full bg-dark border border-gray-600 flex items-center justify-center mr-3">
+                                    <span>4</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">元婴</div>
+                                    <div class="text-sm text-gray-400">共9层</div>
+                                </div>
+                            </div>
+                            <div class="realm-step flex items-center opacity-50">
+                                <div class="w-8 h-8 rounded-full bg-dark border border-gray-600 flex items-center justify-center mr-3">
+                                    <span>5</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">化神</div>
+                                    <div class="text-sm text-gray-400">共9层</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧 - 任务与机缘 -->
+                <div class="bg-glass rounded-xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-2xl font-bold">任务</h3>
+                        <button id="refresh-tasks-btn" class="text-sm bg-dark bg-opacity-50 px-3 py-1 rounded hover:bg-opacity-70 transition-all">
+                            <i class="fa fa-refresh mr-1"></i> 刷新
+                        </button>
+                    </div>
+                    <div id="tasks-container" class="space-y-4 mb-8 max-h-64 overflow-y-auto scrollbar-hidden">
+                        <div class="task bg-dark bg-opacity-50 rounded-lg p-4 border-l-4 border-secondary">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-semibold mb-1">初次修炼</h4>
+                                    <p class="text-sm text-gray-400 mb-2">完成第一次修炼</p>
+                                </div>
+                                <span class="text-xs bg-secondary bg-opacity-30 px-2 py-1 rounded">主线</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="text-sm">
+                                    <span class="text-gray-400">进度: </span>
+                                    <span>0/1</span>
+                                </div>
+                                <button class="task-action-btn text-xs bg-secondary hover:bg-purple-700 px-3 py-1 rounded transition-all" data-task-id="task001">
+                                    前往
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-2xl font-bold">机缘</h3>
+                        <div class="text-sm">
+                            <span class="text-gray-400">触发几率: </span>
+                            <span id="chance-display">5%</span>
+                        </div>
+                    </div>
+                    <div id="chance-container" class="bg-dark bg-opacity-50 rounded-lg p-4 min-h-[120px] flex flex-col items-center justify-center">
+                        <p class="text-gray-400 text-center">暂无机缘事件</p>
+                        <button id="search-chance-btn" class="mt-4 px-4 py-2 bg-accent hover:bg-yellow-600 text-white rounded transition-all">
+                            寻找机缘
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部操作栏 -->
+            <div class="bg-glass rounded-xl p-4 mt-6">
+                <div class="flex justify-between items-center">
+                    <button id="save-game-btn" class="px-6 py-2 bg-secondary hover:bg-purple-700 text-white rounded transition-all">
+                        <i class="fa fa-save mr-1"></i> 保存游戏
+                    </button>
+                    <div class="flex space-x-4">
+                        <button id="settings-btn" class="px-4 py-2 bg-dark bg-opacity-50 hover:bg-opacity-70 text-white rounded transition-all">
+                            <i class="fa fa-cog"></i>
+                        </button>
+                        <button id="help-btn" class="px-4 py-2 bg-dark bg-opacity-50 hover:bg-opacity-70 text-white rounded transition-all">
+                            <i class="fa fa-question-circle"></i>
+                        </button>
+                        <button id="exit-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-all">
+                            <i class="fa fa-sign-out"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 突破动画弹窗 -->
+        <div id="breakthrough-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+            <div class="absolute inset-0 bg-black bg-opacity-80"></div>
+            <div class="relative bg-glass rounded-xl p-8 max-w-2xl w-full mx-4">
+                <div class="text-center mb-6">
+                    <h3 class="text-3xl font-bold mb-2">突破境界</h3>
+                    <p id="breakthrough-realm" class="text-xl">练气九层 → 筑基初期</p>
+                </div>
+                
+                <div class="flex justify-center mb-8">
+                    <div class="w-48 h-48 relative">
+                        <img id="breakthrough-animation" src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/56fadce6c32c4b338356e331ff6aa365~tplv-a9rns2rl98-image.image?rcl=2025121013172585CFF3853ADE9526AB83&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1767935908&x-signature=Qi%2FT9y8umd4NEToOZuJAP4xcR9Y%3D" alt="突破动画" class="w-full h-full object-contain animate-pulse-slow">
+                    </div>
+                </div>
+                
+                <div class="text-center mb-8">
+                    <div class="text-2xl font-bold mb-4" id="breakthrough-result"></div>
+                    <p id="breakthrough-message" class="text-lg"></p>
+                </div>
+                
+                <div class="flex justify-center">
+                    <button id="breakthrough-close-btn" class="px-6 py-3 bg-secondary hover:bg-purple-700 text-white rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                        确定
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 机缘事件弹窗 -->
+        <div id="chance-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+            <div class="absolute inset-0 bg-black bg-opacity-80"></div>
+            <div class="relative bg-glass rounded-xl p-8 max-w-2xl w-full mx-4">
+                <div class="text-center mb-6">
+                    <h3 id="chance-title" class="text-3xl font-bold mb-2">神秘洞穴</h3>
+                    <p id="chance-description" class="text-lg">你在山中发现了一个神秘的洞穴，里面似乎有微弱的光芒...</p>
+                </div>
+                
+                <div class="flex justify-center mb-8">
+                    <div class="w-48 h-48 bg-dark bg-opacity-50 rounded-full flex items-center justify-center">
+                        <span id="chance-icon" class="text-6xl">🕳️</span>
+                    </div>
+                </div>
+                
+                <div class="space-y-4 mb-8">
+                    <button class="chance-choice-btn w-full px-6 py-3 bg-dark hover:bg-opacity-70 text-white rounded-lg font-semibold transition-all duration-300 text-left" data-choice="1">
+                        进入洞穴探索
+                    </button>
+                    <button class="chance-choice-btn w-full px-6 py-3 bg-dark hover:bg-opacity-70 text-white rounded-lg font-semibold transition-all duration-300 text-left" data-choice="2">
+                        谨慎观察，暂时离开
+                    </button>
+                    <button class="chance-choice-btn w-full px-6 py-3 bg-dark hover:bg-opacity-70 text-white rounded-lg font-semibold transition-all duration-300 text-left" data-choice="3">
+                        施展法术探测洞穴内部
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 任务完成弹窗 -->
+        <div id="task-complete-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+            <div class="absolute inset-0 bg-black bg-opacity-80"></div>
+            <div class="relative bg-glass rounded-xl p-8 max-w-2xl w-full mx-4">
+                <div class="text-center mb-6">
+                    <h3 class="text-3xl font-bold mb-2">任务完成</h3>
+                    <p id="task-complete-name" class="text-xl">初次修炼</p>
+                </div>
+                
+                <div class="bg-dark bg-opacity-50 rounded-lg p-6 mb-8">
+                    <h4 class="text-xl font-semibold mb-4">奖励</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center">
+                            <span class="text-yellow-400 mr-2">✨</span>
+                            <span id="task-reward-exp">经验 +100</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-blue-400 mr-2">💧</span>
+                            <span id="task-reward-qi">灵气 +50</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-green-400 mr-2">📦</span>
+                            <span id="task-reward-item">基础丹药 x1</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center">
+                    <button id="task-complete-close-btn" class="px-6 py-3 bg-secondary hover:bg-purple-700 text-white rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                        领取奖励
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏数据
+        const gameData = {
+            player: {
+                name: "无名修士",
+                level: 1,
+                realm: "练气",
+                realmLevel: 1,
+                spiritRoot: "",
+                attributes: {
+                    root: 5,
+                    wisdom: 5,
+                    luck: 5,
+                    constitution: 5,
+                    spiritualPower: 5
+                },
+                cultivation: {
+                    current: 0,
+                    max: 100,
+                    speed: 1
+                },
+                isCultivating: false,
+                cultivationInterval: null
+            },
+            tasks: [
+                {
+                    id: "task001",
+                    type: "main",
+                    title: "初次修炼",
+                    description: "完成第一次修炼",
+                    requirements: {
+                        cultivated: false
+                    },
+                    progress: {
+                        current: 0,
+                        max: 1
+                    },
+                    rewards: {
+                        experience: 100,
+                        qi: 50,
+                        items: ["基础丹药"]
+                    },
+                    completed: false
+                },
+                {
+                    id: "task002",
+                    type: "main",
+                    title: "突破练气",
+                    description: "突破至练气二层",
+                    requirements: {
+                        realm: "练气",
+                        realmLevel: 2
+                    },
+                    progress: {
+                        current: 0,
+                        max: 1
+                    },
+                    rewards: {
+                        experience: 200,
+                        qi: 100,
+                        items: ["培元丹"]
+                    },
+                    completed: false
+                },
+                {
+                    id: "task003",
+                    type: "side",
+                    title: "寻找灵草",
+                    description: "在山中寻找三株灵草",
+                    requirements: {
+                        herbs: 0
+                    },
+                    progress: {
+                        current: 0,
+                        max: 3
+                    },
+                    rewards: {
+                        experience: 150,
+                        qi: 75,
+                        items: ["聚气散"]
+                    },
+                    completed: false
+                }
+            ],
+            chanceEvents: [
+                {
+                    id: "chance001",
+                    title: "神秘洞穴",
+                    description: "你在山中发现了一个神秘的洞穴，里面似乎有微弱的光芒...",
+                    icon: "🕳️",
+                    choices: [
+                        {
+                            text: "进入洞穴探索",
+                            requirements: {
+                                constitution: 8
+                            },
+                            results: {
+                                success: {
+                                    message: "你在洞穴深处发现了一株千年灵芝，服下后体质大增！",
+                                    rewards: {
+                                        constitution: 2,
+                                        qi: 100
+                                    }
+                                },
+                                failure: {
+                                    message: "洞穴内瘴气弥漫，你勉强逃出，但元气大伤。",
+                                    penalties: {
+                                        constitution: -1,
+                                        qi: -50
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            text: "谨慎观察，暂时离开",
+                            results: {
+                                message: "你决定谨慎行事，离开了洞穴。虽然错过了机缘，但也避免了潜在的危险。",
+                                rewards: {
+                                    luck: 1
+                                }
+                            }
+                        },
+                        {
+                            text: "施展法术探测洞穴内部",
+                            requirements: {
+                                spiritualPower: 8,
+                                wisdom: 7
+                            },
+                            results: {
+                                success: {
+                                    message: "你的法术探测到洞穴内有强大的灵气波动，同时也发现了隐藏的危险。你准备充分后进入，获得了大量灵气。",
+                                    rewards: {
+                                        qi: 200,
+                                        wisdom: 1
+                                    }
+                                },
+                                failure: {
+                                    message: "你的法术未能完全探测洞穴情况，反而惊动了洞中的守护者，你不得不狼狈逃离。",
+                                    penalties: {
+                                        spiritualPower: -1,
+                                        qi: -30
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    id: "chance002",
+                    title: "遇见高人",
+                    description: "在山脚下，你遇到了一位看起来普通的老者，但他身上隐约散发着强大的气息...",
+                    icon: "👴",
+                    choices: [
+                        {
+                            text: "上前请教修仙之道",
+                            requirements: {
+                                luck: 7
+                            },
+                            results: {
+                                success: {
+                                    message: "老者竟是一位隐居的高人，他见你诚心向道，传授了你一篇上古修炼法诀！",
+                                    rewards: {
+                                        wisdom: 3,
+                                        qi: 150
+                                    }
+                                },
+                                failure: {
+                                    message: "老者只是一位普通的山民，你向他请教修仙之道，他困惑地摇了摇头。",
+                                    penalties: {
+                                        luck: -1
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            text: "恭敬地行礼后离开",
+                            results: {
+                                message: "你向老者恭敬地行了一礼，然后离开。老者看着你的背影，微微点头。",
+                                rewards: {
+                                    luck: 2
+                                }
+                            }
+                        },
+                        {
+                            text: "试探他的实力",
+                            requirements: {
+                                spiritualPower: 10
+                            },
+                            results: {
+                                success: {
+                                    message: "你的试探引起了老者的兴趣，他决定考验你。经过一番较量，你虽然败了，但获得了宝贵的经验。",
+                                    rewards: {
+                                        root: 1,
+                                        spiritualPower: 2,
+                                        experience: 200
+                                    }
+                                },
+                                failure: {
+                                    message: "你的试探被老者轻易化解，他对你的无礼感到失望，拂袖而去。",
+                                    penalties: {
+                                        luck: -2
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    id: "chance003",
+                    title: "灵泉宝地",
+                    description: "你发现了一处蕴含浓郁灵气的泉水，这是修炼的绝佳场所！",
+                    icon: "💧",
+                    choices: [
+                        {
+                            text: "立即在此修炼",
+                            results: {
+                                message: "你在灵泉旁打坐修炼，灵气如潮水般涌入体内，修为大进！",
+                                rewards: {
+                                    qi: 300,
+                                    wisdom: 1
+                                }
+                            }
+                        },
+                        {
+                            text: "取一些泉水带走",
+                            results: {
+                                message: "你取了一些灵泉水装入玉瓶，可以在需要时使用。",
+                                rewards: {
+                                    items: ["灵泉水"]
+                                }
+                            }
+                        },
+                        {
+                            text: "深入探索灵泉源头",
+                            requirements: {
+                                root: 10,
+                                constitution: 10
+                            },
+                            results: {
+                                success: {
+                                    message: "你沿着灵泉找到了源头，那里有一块上品灵玉正在不断散发灵气。你将其取走，这是无价之宝！",
+                                    rewards: {
+                                        items: ["上品灵玉"],
+                                        spiritualPower: 3
+                                    }
+                                },
+                                failure: {
+                                    message: "灵泉源头有强大的禁制保护，你尝试破解时受了轻伤。",
+                                    penalties: {
+                                        constitution: -2,
+                                        qi: -100
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            ],
+            realms: [
+                {
+                    name: "练气",
+                    levels: 10,
+                    nextRealm: "筑基",
+                    breakthroughCost: 100,
+                    baseAttributes: {
+                        root: 0,
+                        wisdom: 0,
+                        luck: 0,
+                        constitution: 0,
+                        spiritualPower: 10
+                    }
+                },
+                {
+                    name: "筑基",
+                    levels: 3,
+                    nextRealm: "金丹",
+                    breakthroughCost: 1000,
+                    baseAttributes: {
+                        root: 5,
+                        wisdom: 5,
+                        luck: 3,
+                        constitution: 5,
+                        spiritualPower: 20
+                    }
+                },
+                {
+                    name: "金丹",
+                    levels: 9,
+                    nextRealm: "元婴",
+                    breakthroughCost: 5000,
+                    baseAttributes: {
+                        root: 10,
+                        wisdom: 10,
+                        luck: 5,
+                        constitution: 10,
+                        spiritualPower: 30
+                    }
+                },
+                {
+                    name: "元婴",
+                    levels: 9,
+                    nextRealm: "化神",
+                    breakthroughCost: 20000,
+                    baseAttributes: {
+                        root: 15,
+                        wisdom: 15,
+                        luck: 8,
+                        constitution: 15,
+                        spiritualPower: 40
+                    }
+                },
+                {
+                    name: "化神",
+                    levels: 9,
+                    nextRealm: "炼虚",
+                    breakthroughCost: 100000,
+                    baseAttributes: {
+                        root: 20,
+                        wisdom: 20,
+                        luck: 10,
+                        constitution: 20,
+                        spiritualPower: 50
+                    }
+                }
+            ],
+            items: [
+                {
+                    id: "basicPill",
+                    name: "基础丹药",
+                    description: "提升少量灵气",
+                    effect: {
+                        qi: 50
+                    }
+                },
+                {
+                    id: "peiyuanPill",
+                    name: "培元丹",
+                    description: "提升灵气并增强根骨",
+                    effect: {
+                        qi: 200,
+                        root: 1
+                    }
+                },
+                {
+                    id: "juqiSan",
+                    name: "聚气散",
+                    description: "大幅提升灵气",
+                    effect: {
+                        qi: 500
+                    }
+                },
+                {
+                    id: "lingquanWater",
+                    name: "灵泉水",
+                    description: "蕴含浓郁灵气的泉水",
+                    effect: {
+                        qi: 300,
+                        allAttributes: 1
+                    }
+                },
+                {
+                    id: "highGradeSpiritJade",
+                    name: "上品灵玉",
+                    description: "蕴含强大灵气的宝玉",
+                    effect: {
+                        qi: 1000,
+                        spiritualPower: 5
+                    }
+                }
+            ],
+            notifications: []
+        };
+
+        // DOM 元素
+        const elements = {
+            startScreen: document.getElementById('start-screen'),
+            characterCreation: document.getElementById('character-creation'),
+            gameScreen: document.getElementById('game-screen'),
+            newGameBtn: document.getElementById('new-game-btn'),
+            loadGameBtn: document.getElementById('load-game-btn'),
+            startGameBtn: document.getElementById('start-game-btn'),
+            characterName: document.getElementById('character-name'),
+            remainingPoints: document.getElementById('remaining-points'),
+            spiritRoots: document.querySelectorAll('.spirit-root'),
+            attributeBtns: document.querySelectorAll('.attribute-btn'),
+            characterNameDisplay: document.getElementById('character-name-display'),
+            realmDisplay: document.getElementById('realm-display'),
+            levelDisplay: document.getElementById('level-display'),
+            currentQi: document.getElementById('current-qi'),
+            maxQi: document.getElementById('max-qi'),
+            cultivationSpeed: document.getElementById('cultivation-speed'),
+            breakthroughChance: document.getElementById('breakthrough-chance'),
+            rootDisplay: document.getElementById('root-display'),
+            wisdomDisplay: document.getElementById('wisdom-display'),
+            luckDisplay: document.getElementById('luck-display'),
+            constitutionDisplay: document.getElementById('constitution-display'),
+            spiritualPowerDisplay: document.getElementById('spiritualPower-display'),
+            qiPercentage: document.getElementById('qi-percentage'),
+            qiProgressBar: document.getElementById('qi-progress-bar'),
+            cultivateBtn: document.getElementById('cultivate-btn'),
+            breakthroughBtn: document.getElementById('breakthrough-btn'),
+            refreshTasksBtn: document.getElementById('refresh-tasks-btn'),
+            tasksContainer: document.getElementById('tasks-container'),
+            chanceContainer: document.getElementById('chance-container'),
+            searchChanceBtn: document.getElementById('search-chance-btn'),
+            chanceDisplay: document.getElementById('chance-display'),
+            saveGameBtn: document.getElementById('save-game-btn'),
+            settingsBtn: document.getElementById('settings-btn'),
+            helpBtn: document.getElementById('help-btn'),
+            exitBtn: document.getElementById('exit-btn'),
+            breakthroughModal: document.getElementById('breakthrough-modal'),
+            breakthroughRealm: document.getElementById('breakthrough-realm'),
+            breakthroughAnimation: document.getElementById('breakthrough-animation'),
+            breakthroughResult: document.getElementById('breakthrough-result'),
+            breakthroughMessage: document.getElementById('breakthrough-message'),
+            breakthroughCloseBtn: document.getElementById('breakthrough-close-btn'),
+            chanceModal: document.getElementById('chance-modal'),
+            chanceTitle: document.getElementById('chance-title'),
+            chanceDescription: document.getElementById('chance-description'),
+            chanceIcon: document.getElementById('chance-icon'),
+            chanceChoiceBtns: document.querySelectorAll('.chance-choice-btn'),
+            taskCompleteModal: document.getElementById('task-complete-modal'),
+            taskCompleteName: document.getElementById('task-complete-name'),
+            taskRewardExp: document.getElementById('task-reward-exp'),
+            taskRewardQi: document.getElementById('task-reward-qi'),
+            taskRewardItem: document.getElementById('task-reward-item'),
+            taskCompleteCloseBtn: document.getElementById('task-complete-close-btn')
+        };
+
+        // 初始化游戏
+        function initGame() {
+            // 创建星星背景
+            createStars();
+            
+            // 绑定事件
+            bindEvents();
+            
+            // 检查是否有存档
+            checkSaveGame();
+        }
+
+        // 创建星星背景
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const starsCount = 200;
+            
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                const size = Math.random() * 2;
+                
+                star.style.position = 'absolute';
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.backgroundColor = 'white';
+                star.style.borderRadius = '50%';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.opacity = Math.random() * 0.8 + 0.2;
+                star.style.animation = `pulse ${Math.random() * 3 + 2}s infinite`;
+                star.style.animationDelay = `${Math.random() * 5}s`;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 开始界面
+            elements.newGameBtn.addEventListener('click', startNewGame);
+            elements.loadGameBtn.addEventListener('click', loadGame);
+            
+            // 角色创建
+            elements.characterName.addEventListener('input', validateCharacterCreation);
+            elements.spiritRoots.forEach(root => {
+                root.addEventListener('click', selectSpiritRoot);
+            });
+            elements.attributeBtns.forEach(btn => {
+                btn.addEventListener('click', addAttributePoint);
+            });
+            elements.startGameBtn.addEventListener('click', startGame);
+            
+            // 游戏界面
+            elements.cultivateBtn.addEventListener('click', toggleCultivation);
+            elements.breakthroughBtn.addEventListener('click', attemptBreakthrough);
+            elements.refreshTasksBtn.addEventListener('click', refreshTasks);
+            elements.searchChanceBtn.addEventListener('click', searchChance);
+            elements.saveGameBtn.addEventListener('click', saveGame);
+            elements.exitBtn.addEventListener('click', exitGame);
+            
+            // 弹窗
+            elements.breakthroughCloseBtn.addEventListener('click', closeBreakthroughModal);
+            
+            // 任务完成弹窗
+            elements.taskCompleteCloseBtn.addEventListener('click', closeTaskCompleteModal);
+        }
+
+        // 检查是否有存档
+        function checkSaveGame() {
+            const saveData = localStorage.getItem('immortalCultivationSave');
+            elements.loadGameBtn.disabled = !saveData;
+        }
+
+        // 开始新游戏
+        function startNewGame() {
+            elements.startScreen.classList.add('hidden');
+            elements.characterCreation.classList.remove('hidden');
+            
+            // 重置角色创建数据
+            elements.characterName.value = '';
+            elements.remainingPoints.textContent = '10';
+            
+            // 重置属性值
+            document.getElementById('root-value').textContent = '5';
+            document.getElementById('wisdom-value').textContent = '5';
+            document.getElementById('luck-value').textContent = '5';
+            document.getElementById('constitution-value').textContent = '5';
+            document.getElementById('spiritualPower-value').textContent = '5';
+            
+            // 重置灵根选择
+            elements.spiritRoots.forEach(root => {
+                root.classList.remove('border-secondary', 'bg-opacity-70');
+                root.classList.add('border-gray-600', 'bg-opacity-50');
+            });
+            
+            // 禁用开始游戏按钮
+            elements.startGameBtn.disabled = true;
+        }
+
+        // 选择灵根
+        function selectSpiritRoot(e) {
+            const selectedRoot = e.currentTarget;
+            
+            // 移除其他灵根的选中状态
+            elements.spiritRoots.forEach(root => {
+                root.classList.remove('border-secondary', 'bg-opacity-70');
+                root.classList.add('border-gray-600', 'bg-opacity-50');
+            });
+            
+            // 添加当前灵根的选中状态
+            selectedRoot.classList.remove('border-gray-600', 'bg-opacity-50');
+            selectedRoot.classList.add('border-secondary', 'bg-opacity-70');
+            
+            // 保存选择的灵根
+            gameData.player.spiritRoot = selectedRoot.dataset.root;
+            
+            // 验证角色创建
+            validateCharacterCreation();
+        }
+
+        // 添加属性点
+        function addAttributePoint(e) {
+            const attr = e.currentTarget.dataset.attr;
+            const remainingPoints = parseInt(elements.remainingPoints.textContent);
+            
+            if (remainingPoints > 0) {
+                let currentValue;
+                switch (attr) {
+                    case '根骨':
+                        currentValue = parseInt(document.getElementById('root-value').textContent);
+                        document.getElementById('root-value').textContent = currentValue + 1;
+                        break;
+                    case '悟性':
+                        currentValue = parseInt(document.getElementById('wisdom-value').textContent);
+                        document.getElementById('wisdom-value').textContent = currentValue + 1;
+                        break;
+                    case '福缘':
+                        currentValue = parseInt(document.getElementById('luck-value').textContent);
+                        document.getElementById('luck-value').textContent = currentValue + 1;
+                        break;
+                    case '体质':
+                        currentValue = parseInt(document.getElementById('constitution-value').textContent);
+                        document.getElementById('constitution-value').textContent = currentValue + 1;
+                        break;
+                    case '灵力':
+                        currentValue = parseInt(document.getElementById('spiritualPower-value').textContent);
+                        document.getElementById('spiritualPower-value').textContent = currentValue + 1;
+                        break;
+                }
+                
+                // 减少剩余点数
+                elements.remainingPoints.textContent = remainingPoints - 1;
+                
+                // 验证角色创建
+                validateCharacterCreation();
+            }
+        }
+
+        // 验证角色创建
+        function validateCharacterCreation() {
+            const name = elements.characterName.value.trim();
+            const hasSpiritRoot = gameData.player.spiritRoot !== '';
+            
+            elements.startGameBtn.disabled = !(name && hasSpiritRoot);
+        }
+
+        // 开始游戏
+        function startGame() {
+            // 获取角色名称
+            gameData.player.name = elements.characterName.value.trim();
+            
+            // 获取属性值
+            gameData.player.attributes = {
+                root: parseInt(document.getElementById('root-value').textContent),
+                wisdom: parseInt(document.getElementById('wisdom-value').textContent),
+                luck: parseInt(document.getElementById('luck-value').textContent),
+                constitution: parseInt(document.getElementById('constitution-value').textContent),
+                spiritualPower: parseInt(document.getElementById('spiritualPower-value').textContent)
+            };
+            
+            // 应用灵根加成
+            const selectedRoot = document.querySelector('.spirit-root.border-secondary');
+            if (selectedRoot) {
+                const bonus = JSON.parse(selectedRoot.dataset.bonus);
+                for (const [attr, value] of Object.entries(bonus)) {
+                    switch (attr) {
+                        case '根骨':
+                            gameData.player.attributes.root += value;
+                            break;
+                        case '悟性':
+                            gameData.player.attributes.wisdom += value;
+                            break;
+                        case '福缘':
+                            gameData.player.attributes.luck += value;
+                            break;
+                        case '体质':
+                            gameData.player.attributes.constitution += value;
+                            break;
+                        case '灵力':
+                            gameData.player.attributes.spiritualPower += value;
+                            break;
+                    }
+                }
+            }
+            
+            // 计算修炼速度和突破成功率
+            updateCultivationStats();
+            
+            // 更新界面
+            updateGameUI();
+            
+            // 显示游戏界面
+            elements.characterCreation.classList.add('hidden');
+            elements.gameScreen.classList.remove('hidden');
+            
+            // 生成初始任务
+            generateTasks();
+        }
+
+        // 更新修炼相关属性
+        function updateCultivationStats() {
+            // 修炼速度 = 基础速度(1) + 悟性/5 + 灵力/10
+            gameData.player.cultivation.speed = 1 + Math.floor(gameData.player.attributes.wisdom / 5) + Math.floor(gameData.player.attributes.spiritualPower / 10);
+            
+            // 灵气上限 = 基础上限(100) + 体质*10 + 当前境界基础属性
+            const currentRealm = gameData.realms.find(realm => realm.name === gameData.player.realm);
+            if (currentRealm) {
+                gameData.player.cultivation.max = 100 + gameData.player.attributes.constitution * 10 + currentRealm.baseAttributes.constitution * 10;
+            }
+            
+            // 突破成功率 = 基础成功率(50%) + 悟性/10 + 福缘/20
+            gameData.breakthroughSuccessRate = 50 + Math.floor(gameData.player.attributes.wisdom / 10) + Math.floor(gameData.player.attributes.luck / 20);
+            gameData.breakthroughSuccessRate = Math.min(gameData.breakthroughSuccessRate, 95); // 最高95%
+            
+            // 机缘触发几率 = 基础几率(5%) + 福缘/10
+            gameData.chanceTriggerRate = 5 + Math.floor(gameData.player.attributes.luck / 10);
+            gameData.chanceTriggerRate = Math.min(gameData.chanceTriggerRate, 50); // 最高50%
+        }
+
+        // 更新游戏界面
+        function updateGameUI() {
+            // 更新角色信息
+            elements.characterNameDisplay.textContent = gameData.player.name;
+            elements.realmDisplay.textContent = `${gameData.player.realm}${getRealmLevelText(gameData.player.realmLevel)}`;
+            elements.levelDisplay.textContent = `等级: ${gameData.player.level}`;
+            
+            // 更新灵气信息
+            elements.currentQi.textContent = gameData.player.cultivation.current;
+            elements.maxQi.textContent = gameData.player.cultivation.max;
+            elements.qiPercentage.textContent = `${Math.floor((gameData.player.cultivation.current / gameData.player.cultivation.max) * 100)}%`;
+            elements.qiProgressBar.style.width = `${(gameData.player.cultivation.current / gameData.player.cultivation.max) * 100}%`;
+            
+            // 更新修炼速度和突破成功率
+            elements.cultivationSpeed.textContent = gameData.player.cultivation.speed;
+            elements.breakthroughChance.textContent = `${gameData.breakthroughSuccessRate}%`;
+            
+            // 更新属性显示
+            elements.rootDisplay.textContent = gameData.player.attributes.root;
+            elements.wisdomDisplay.textContent = gameData.player.attributes.wisdom;
+            elements.luckDisplay.textContent = gameData.player.attributes.luck;
+            elements.constitutionDisplay.textContent = gameData.player.attributes.constitution;
+            elements.spiritualPowerDisplay.textContent = gameData.player.attributes.spiritualPower;
+            
+            // 更新突破按钮状态
+            const currentRealm = gameData.realms.find(realm => realm.name === gameData.player.realm);
+            if (currentRealm) {
+                const isMaxLevel = gameData.player.realmLevel >= currentRealm.levels;
+                const hasEnoughQi = gameData.player.cultivation.current >= currentRealm.breakthroughCost;
+                elements.breakthroughBtn.disabled = !(isMaxLevel && hasEnoughQi);
+            }
+            
+            // 更新机缘触发几率
+            elements.chanceDisplay.textContent = `${gameData.chanceTriggerRate}%`;
+            
+            // 更新境界显示
+            updateRealmDisplay();
+        }
+
+        // 获取境界层数文本
+        function getRealmLevelText(level) {
+            const realmNames = {
+                1: "一层", 2: "二层", 3: "三层", 4: "四层", 5: "五层",
+                6: "六层", 7: "七层", 8: "八层", 9: "九层", 10: "十层"
+            };
+            
+            if (level <= 10) {
+                return realmNames[level];
+            }
+            
+            return `${level}层`;
+        }
+
+        // 更新境界显示
+        function updateRealmDisplay() {
+            const realmSteps = document.querySelectorAll('.realm-step');
+            
+            gameData.realms.forEach((realm, index) => {
+                if (index < realmSteps.length) {
+                    const isCurrentRealm = realm.name === gameData.player.realm;
+                    const isPastRealm = index < gameData.realms.findIndex(r => r.name === gameData.player.realm);
+                    
+                    if (isPastRealm) {
+                        realmSteps[index].classList.remove('opacity-50');
+                        realmSteps[index].querySelector('div').classList.remove('bg-dark', 'border-gray-600');
+                        realmSteps[index].querySelector('div').classList.add('bg-secondary', 'realm-glow');
+                    } else if (isCurrentRealm) {
+                        realmSteps[index].classList.remove('opacity-50');
+                        realmSteps[index].querySelector('div').classList.remove('bg-dark', 'border-gray-600');
+                        realmSteps[index].querySelector('div').classList.add('bg-secondary', 'realm-glow');
+                    } else {
+                        realmSteps[index].classList.add('opacity-50');
+                        realmSteps[index].querySelector('div').classList.remove('bg-secondary', 'realm-glow');
+                        realmSteps[index].querySelector('div').classList.add('bg-dark', 'border-gray-600');
+                    }
+                }
+            });
+        }
+
+        // 切换修炼状态
+        function toggleCultivation() {
+            if (gameData.player.isCultivating) {
+                // 停止修炼
+                clearInterval(gameData.player.cultivationInterval);
+                gameData.player.isCultivating = false;
+                elements.cultivateBtn.textContent = '开始修炼';
+                
+                // 检查任务完成情况
+                checkTaskCompletion('cultivated', true);
+            } else {
+                // 开始修炼
+                gameData.player.isCultivating = true;
+                elements.cultivateBtn.textContent = '停止修炼';
+                
+                gameData.player.cultivationInterval = setInterval(() => {
+                    // 增加灵气
+                    gameData.player.cultivation.current += gameData.player.cultivation.speed;
+                    
+                    // 检查是否达到上限
+                    if (gameData.player.cultivation.current >= gameData.player.cultivation.max) {
+                        gameData.player.cultivation.current = gameData.player.cultivation.max;
+                        clearInterval(gameData.player.cultivationInterval);
+                        gameData.player.isCultivating = false;
+                        elements.cultivateBtn.textContent = '开始修炼';
+                    }
+                    
+                    // 更新界面
+                    updateGameUI();
+                }, 1000);
+            }
+        }
+
+        // 尝试突破
+        function attemptBreakthrough() {
+            const currentRealm = gameData.realms.find(realm => realm.name === gameData.player.realm);
+            
+            if (!currentRealm || gameData.player.realmLevel < currentRealm.levels) {
+                return;
+            }
+            
+            if (gameData.player.cultivation.current < currentRealm.breakthroughCost) {
+                return;
+            }
+            
+            // 显示突破弹窗
+            elements.breakthroughModal.classList.remove('hidden');
+            elements.breakthroughRealm.textContent = `${gameData.player.realm}${getRealmLevelText(gameData.player.realmLevel)} → ${currentRealm.nextRealm}初期`;
+            
+            // 播放突破动画
+            elements.breakthroughAnimation.classList.add('animate-spin-slow');
+            
+            // 延迟显示结果
+            setTimeout(() => {
+                // 计算突破是否成功
+                const roll = Math.random() * 100;
+                const isSuccess = roll < gameData.breakthroughSuccessRate;
+                
+                if (isSuccess) {
+                    // 突破成功
+                    breakthroughSuccess(currentRealm);
+                } else {
+                    // 突破失败
+                    breakthroughFailure(currentRealm);
+                }
+                
+                // 停止动画
+                elements.breakthroughAnimation.classList.remove('animate-spin-slow');
+            }, 3000);
+        }
+
+        // 突破成功
+        function breakthroughSuccess(currentRealm) {
+            // 更新境界
+            gameData.player.realm = currentRealm.nextRealm;
+            gameData.player.realmLevel = 1;
+            
+            // 消耗灵气
+            gameData.player.cultivation.current -= currentRealm.breakthroughCost;
+            
+            // 提升属性
+            const nextRealm = gameData.realms.find(realm => realm.name === currentRealm.nextRealm);
+            if (nextRealm) {
+                for (const [attr, value] of Object.entries(nextRealm.baseAttributes)) {
+                    switch (attr) {
+                        case 'root':
+                            gameData.player.attributes.root += value;
+                            break;
+                        case 'wisdom':
+                            gameData.player.attributes.wisdom += value;
+                            break;
+                        case 'luck':
+                            gameData.player.attributes.luck += value;
+                            break;
+                        case 'constitution':
+                            gameData.player.attributes.constitution += value;
+                            break;
+                        case 'spiritualPower':
+                            gameData.player.attributes.spiritualPower += value;
+                            break;
+                    }
+                }
+            }
+            
+            // 提升等级
+            gameData.player.level += 5;
+            
+            // 更新修炼相关属性
+            updateCultivationStats();
+            
+            // 更新界面
+            updateGameUI();
+            
+            // 显示突破成功信息
+            elements.breakthroughResult.textContent = '突破成功！';
+            elements.breakthroughResult.className = 'text-2xl font-bold mb-4 突破成功';
+            elements.breakthroughMessage.textContent = `恭喜！你成功突破至${gameData.player.realm}初期，属性大幅提升！`;
+            
+            // 检查任务完成情况
+            checkTaskCompletion('realm', gameData.player.realm);
+            checkTaskCompletion('realmLevel', gameData.player.realmLevel);
+        }
+
+        // 突破失败
+        function breakthroughFailure(currentRealm) {
+            // 消耗部分灵气
+            const loss = Math.floor(currentRealm.breakthroughCost * 0.5);
+            gameData.player.cultivation.current = Math.max(0, gameData.player.cultivation.current - loss);
+            
+            // 更新界面
+            updateGameUI();
+            
+            // 显示突破失败信息
+            elements.breakthroughResult.textContent = '突破失败！';
+            elements.breakthroughResult.className = 'text-2xl font-bold mb-4 突破失败';
+            elements.breakthroughMessage.textContent = `突破失败，损失了${loss}点灵气。继续积累，下次再来尝试吧！`;
+        }
+
+        // 关闭突破弹窗
+        function closeBreakthroughModal() {
+            elements.breakthroughModal.classList.add('hidden');
+        }
+
+        // 生成任务
+        function generateTasks() {
+            // 清空任务容器
+            elements.tasksContainer.innerHTML = '';
+            
+            // 筛选未完成的任务
+            const incompleteTasks = gameData.tasks.filter(task => !task.completed);
+            
+            // 显示任务
+            incompleteTasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = `task bg-dark bg-opacity-50 rounded-lg p-4 border-l-4 ${task.type === 'main' ? 'border-secondary' : task.type === 'side' ? 'border-accent' : 'border-green-500'}`;
+                
+                taskElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-semibold mb-1">${task.title}</h4>
+                            <p class="text-sm text-gray-400 mb-2">${task.description}</p>
+                        </div>
+                        <span class="text-xs bg-${task.type === 'main' ? 'secondary' : task.type === 'side' ? 'accent' : 'green-500'} bg-opacity-30 px-2 py-1 rounded">${task.type === 'main' ? '主线' : task.type === 'side' ? '支线' : '日常'}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm">
+                            <span class="text-gray-400">进度: </span>
+                            <span>${task.progress.current}/${task.progress.max}</span>
+                        </div>
+                        <button class="task-action-btn text-xs bg-secondary hover:bg-purple-700 px-3 py-1 rounded transition-all" data-task-id="${task.id}">
+                            ${getTaskActionText(task)}
+                        </button>
+                    </div>
+                `;
+                
+                elements.tasksContainer.appendChild(taskElement);
+                
+                // 绑定任务按钮事件
+                const actionBtn = taskElement.querySelector('.task-action-btn');
+                actionBtn.addEventListener('click', () => {
+                    handleTaskAction(task);
+                });
+            });
+        }
+
+        // 获取任务按钮文本
+        function getTaskActionText(task) {
+            if (task.id === 'task001') {
+                return '开始修炼';
+            } else if (task.id === 'task002') {
+                return '突破境界';
+            } else if (task.id === 'task003') {
+                return '寻找灵草';
+            }
+            
+            return '前往';
+        }
+
+        // 处理任务操作
+        function handleTaskAction(task) {
+            if (task.id === 'task001') {
+                // 初次修炼任务
+                if (!gameData.player.isCultivating) {
+                    toggleCultivation();
+                }
+            } else if (task.id === 'task002') {
+                // 突破练气任务
+                if (elements.breakthroughBtn.disabled === false) {
+                    attemptBreakthrough();
+                }
+            } else if (task.id === 'task003') {
+                // 寻找灵草任务
+                searchHerbs();
+            }
+        }
+
+        // 寻找灵草
+        function searchHerbs() {
+            const task = gameData.tasks.find(t => t.id === 'task003');
+            if (!task || task.completed) return;
+            
+            // 基于福缘属性计算成功率
+            const successRate = 30 + gameData.player.attributes.luck * 5;
+            const roll = Math.random() * 100;
+            
+            if (roll < successRate) {
+                // 找到灵草
+                task.progress.current = Math.min(task.progress.current + 1, task.progress.max);
+                
+                // 显示提示
+                showNotification(`你找到了一株灵草！(${task.progress.current}/${task.progress.max})`);
+                
+                // 检查任务是否完成
+                if (task.progress.current >= task.progress.max) {
+                    completeTask(task);
+                }
+            } else {
+                // 未找到灵草
+                showNotification('你仔细搜索了一遍，但没有发现灵草的踪迹。');
+            }
+            
+            // 更新任务显示
+            generateTasks();
+        }
+
+        // 刷新任务
+        function refreshTasks() {
+            // 随机生成一个新的支线任务
+            const randomTaskId = Math.floor(Math.random() * 3) + 1;
+            const taskId = `task00${randomTaskId}`;
+            
+            // 检查任务是否已存在且未完成
+            const existingTask = gameData.tasks.find(t => t.id === taskId && !t.completed);
+            if (!existingTask) {
+                // 重置任务进度
+                const task = gameData.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.completed = false;
+                    task.progress.current = 0;
+                    showNotification('任务已刷新！');
+                }
+            } else {
+                showNotification('当前已有未完成的任务！');
+            }
+            
+            // 更新任务显示
+            generateTasks();
+        }
+
+        // 检查任务完成情况
+        function checkTaskCompletion(type, value) {
+            gameData.tasks.forEach(task => {
+                if (task.completed) return;
+                
+                let isCompleted = false;
+                
+                switch (type) {
+                    case 'cultivated':
+                        if (task.id === 'task001' && value === true) {
+                            task.progress.current = task.progress.max;
+                            isCompleted = true;
+                        }
+                        break;
+                    case 'realm':
+                        if (task.requirements.realm === value) {
+                            task.progress.current = task.progress.max;
+                            isCompleted = true;
+                        }
+                        break;
+                    case 'realmLevel':
+                        if (task.requirements.realmLevel === value && task.requirements.realm === gameData.player.realm) {
+                            task.progress.current = task.progress.max;
+                            isCompleted = true;
+                        }
+                        break;
+                }
+                
+                if (isCompleted) {
+                    completeTask(task);
+                }
+            });
+        }
+
+        // 完成任务
+        function completeTask(task) {
+            task.completed = true;
+            
+            // 应用奖励
+            if (task.rewards.experience) {
+                gameData.player.level += Math.floor(task.rewards.experience / 100);
+            }
+            
+            if (task.rewards.qi) {
+                gameData.player.cultivation.current = Math.min(
+                    gameData.player.cultivation.current + task.rewards.qi,
+                    gameData.player.cultivation.max
+                );
+            }
+            
+            // 更新界面
+            updateGameUI();
+            
+            // 显示任务完成弹窗
+            showTaskCompleteModal(task);
+            
+            // 更新任务显示
+            generateTasks();
+        }
+
+        // 显示任务完成弹窗
+        function showTaskCompleteModal(task) {
+            elements.taskCompleteName.textContent = task.title;
+            
+            // 设置奖励显示
+            elements.taskRewardExp.textContent = task.rewards.experience ? `经验 +${task.rewards.experience}` : '无';
+            elements.taskRewardQi.textContent = task.rewards.qi ? `灵气 +${task.rewards.qi}` : '无';
+            elements.taskRewardItem.textContent = task.rewards.items && task.rewards.items.length > 0 ? 
+                `${task.rewards.items[0]} x1` : '无';
+            
+            // 显示弹窗
+            elements.taskCompleteModal.classList.remove('hidden');
+        }
+
+        // 关闭任务完成弹窗
+        function closeTaskCompleteModal() {
+            elements.taskCompleteModal.classList.add('hidden');
+        }
+
+        // 寻找机缘
+        function searchChance() {
+            // 基于机缘触发几率计算是否触发
+            const roll = Math.random() * 100;
+            
+            if (roll < gameData.chanceTriggerRate) {
+                // 触发机缘事件
+                triggerChanceEvent();
+            } else {
+                // 未触发机缘
+                showNotification('你四处寻找，但并未发现特殊的机缘。');
+            }
+        }
+
+        // 触发机缘事件
+        function triggerChanceEvent() {
+            // 随机选择一个机缘事件
+            const randomIndex = Math.floor(Math.random() * gameData.chanceEvents.length);
+            const event = gameData.chanceEvents[randomIndex];
+            
+            // 设置机缘事件信息
+            elements.chanceTitle.textContent = event.title;
+            elements.chanceDescription.textContent = event.description;
+            elements.chanceIcon.textContent = event.icon;
+            
+            // 更新选择按钮
+            const choiceBtns = document.querySelectorAll('.chance-choice-btn');
+            choiceBtns.forEach((btn, index) => {
+                if (index < event.choices.length) {
+                    const choice = event.choices[index];
+                    btn.textContent = choice.text;
+                    btn.dataset.choice = index;
+                    btn.dataset.eventId = event.id;
+                    btn.classList.remove('hidden');
+                    
+                    // 检查是否满足选择条件
+                    if (choice.requirements) {
+                        let canChoose = true;
+                        for (const [attr, value] of Object.entries(choice.requirements)) {
+                            switch (attr) {
+                                case 'root':
+                                    if (gameData.player.attributes.root < value) canChoose = false;
+                                    break;
+                                case 'wisdom':
+                                    if (gameData.player.attributes.wisdom < value) canChoose = false;
+                                    break;
+                                case 'luck':
+                                    if (gameData.player.attributes.luck < value) canChoose = false;
+                                    break;
+                                case 'constitution':
+                                    if (gameData.player.attributes.constitution < value) canChoose = false;
+                                    break;
+                                case 'spiritualPower':
+                                    if (gameData.player.attributes.spiritualPower < value) canChoose = false;
+                                    break;
+                            }
+                        }
+                        
+                        if (!canChoose) {
+                            btn.classList.add('opacity-50', 'cursor-not-allowed');
+                            btn.disabled = true;
+                        } else {
+                            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            btn.disabled = false;
+                        }
+                    } else {
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        btn.disabled = false;
+                    }
+                } else {
+                    btn.classList.add('hidden');
+                }
+            });
+            
+            // 显示机缘事件弹窗
+            elements.chanceModal.classList.remove('hidden');
+            
+            // 绑定选择按钮事件
+            choiceBtns.forEach(btn => {
+                btn.onclick = () => {
+                    if (!btn.disabled) {
+                        handleChanceChoice(event, parseInt(btn.dataset.choice));
+                    }
+                };
+            });
+        }
+
+        // 处理机缘选择
+        function handleChanceChoice(event, choiceIndex) {
+            const choice = event.choices[choiceIndex];
+            let resultMessage = '';
+            
+            // 检查是否有成功/失败条件
+            if (choice.requirements && choice.results.success && choice.results.failure) {
+                // 计算成功率
+                let successRate = 50; // 基础成功率
+                
+                // 根据属性调整成功率
+                for (const [attr, value] of Object.entries(choice.requirements)) {
+                    let attrValue;
+                    switch (attr) {
+                        case 'root':
+                            attrValue = gameData.player.attributes.root;
+                            break;
+                        case 'wisdom':
+                            attrValue = gameData.player.attributes.wisdom;
+                            break;
+                        case 'luck':
+                            attrValue = gameData.player.attributes.luck;
+                            break;
+                        case 'constitution':
+                            attrValue = gameData.player.attributes.constitution;
+                            break;
+                        case 'spiritualPower':
+                            attrValue = gameData.player.attributes.spiritualPower;
+                            break;
+                    }
+                    
+                    // 每超过要求1点，成功率+5%
+                    if (attrValue > value) {
+                        successRate += (attrValue - value) * 5;
+                    }
+                }
+                
+                successRate = Math.min(successRate, 95); // 最高95%
+                
+                // 判定成功或失败
+                const roll = Math.random() * 100;
+                const isSuccess = roll < successRate;
+                
+                if (isSuccess) {
+                    // 成功结果
+                    resultMessage = choice.results.success.message;
+                    
+                    // 应用奖励
+                    if (choice.results.success.rewards) {
+                        applyRewards(choice.results.success.rewards);
+                    }
+                } else {
+                    // 失败结果
+                    resultMessage = choice.results.failure.message;
+                    
+                    // 应用惩罚
+                    if (choice.results.failure.penalties) {
+                        applyPenalties(choice.results.failure.penalties);
+                    }
+                }
+            } else {
+                // 只有一种结果
+                resultMessage = choice.results.message;
+                
+                // 应用奖励
+                if (choice.results.rewards) {
+                    applyRewards(choice.results.rewards);
+                }
+            }
+            
+            // 显示结果
+            showNotification(resultMessage);
+            
+            // 关闭机缘事件弹窗
+            elements.chanceModal.classList.add('hidden');
+            
+            // 更新界面
+            updateGameUI();
+        }
+
+        // 应用奖励
+        function applyRewards(rewards) {
+            for (const [attr, value] of Object.entries(rewards)) {
+                switch (attr) {
+                    case 'root':
+                        gameData.player.attributes.root += value;
+                        break;
+                    case 'wisdom':
+                        gameData.player.attributes.wisdom += value;
+                        break;
+                    case 'luck':
+                        gameData.player.attributes.luck += value;
+                        break;
+                    case 'constitution':
+                        gameData.player.attributes.constitution += value;
+                        break;
+                    case 'spiritualPower':
+                        gameData.player.attributes.spiritualPower += value;
+                        break;
+                    case 'qi':
+                        gameData.player.cultivation.current = Math.min(
+                            gameData.player.cultivation.current + value,
+                            gameData.player.cultivation.max
+                        );
+                        break;
+                    case 'experience':
+                        gameData.player.level += Math.floor(value / 100);
+                        break;
+                    case 'items':
+                        // 处理物品奖励
+                        if (Array.isArray(value)) {
+                            value.forEach(itemName => {
+                                // 这里可以添加物品到背包的逻辑
+                                showNotification(`获得物品: ${itemName}`);
+                            });
+                        }
+                        break;
+                    case 'allAttributes':
+                        // 提升所有属性
+                        gameData.player.attributes.root += value;
+                        gameData.player.attributes.wisdom += value;
+                        gameData.player.attributes.luck += value;
+                        gameData.player.attributes.constitution += value;
+                        gameData.player.attributes.spiritualPower += value;
+                        break;
+                }
+            }
+            
+            // 更新修炼相关属性
+            updateCultivationStats();
+        }
+
+        // 应用惩罚
+        function applyPenalties(penalties) {
+            for (const [attr, value] of Object.entries(penalties)) {
+                switch (attr) {
+                    case 'root':
+                        gameData.player.attributes.root = Math.max(1, gameData.player.attributes.root + value);
+                        break;
+                    case 'wisdom':
+                        gameData.player.attributes.wisdom = Math.max(1, gameData.player.attributes.wisdom + value);
+                        break;
+                    case 'luck':
+                        gameData.player.attributes.luck = Math.max(1, gameData.player.attributes.luck + value);
+                        break;
+                    case 'constitution':
+                        gameData.player.attributes.constitution = Math.max(1, gameData.player.attributes.constitution + value);
+                        break;
+                    case 'spiritualPower':
+                        gameData.player.attributes.spiritualPower = Math.max(1, gameData.player.attributes.spiritualPower + value);
+                        break;
+                    case 'qi':
+                        gameData.player.cultivation.current = Math.max(0, gameData.player.cultivation.current + value);
+                        break;
+                }
+            }
+            
+            // 更新修炼相关属性
+            updateCultivationStats();
+        }
+
+        // 显示通知
+        function showNotification(message) {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-glass px-4 py-2 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+            notification.textContent = message;
+            
+            // 添加到页面
+            document.body.appendChild(notification);
+            
+            // 显示通知
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // 3秒后隐藏通知
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                
+                // 移除元素
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // 保存游戏
+        function saveGame() {
+            // 停止修炼
+            if (gameData.player.isCultivating) {
+                clearInterval(gameData.player.cultivationInterval);
+                gameData.player.isCultivating = false;
+            }
+            
+            // 保存游戏数据
+            localStorage.setItem('immortalCultivationSave', JSON.stringify(gameData));
+            
+            // 显示通知
+            showNotification('游戏已保存！');
+            
+            // 重新开始修炼（如果之前在修炼）
+            if (gameData.player.isCultivating) {
+                toggleCultivation();
+            }
+        }
+
+        // 加载游戏
+        function loadGame() {
+            const saveData = localStorage.getItem('immortalCultivationSave');
+            
+            if (saveData) {
+                // 加载游戏数据
+                Object.assign(gameData, JSON.parse(saveData));
+                
+                // 更新修炼相关属性
+                updateCultivationStats();
+                
+                // 更新界面
+                updateGameUI();
+                
+                // 生成任务
+                generateTasks();
+                
+                // 显示游戏界面
+                elements.startScreen.classList.add('hidden');
+                elements.gameScreen.classList.remove('hidden');
+                
+                // 显示通知
+                showNotification('游戏已加载！');
+            }
+        }
+
+        // 退出游戏
+        function exitGame() {
+            // 停止修炼
+            if (gameData.player.isCultivating) {
+                clearInterval(gameData.player.cultivationInterval);
+                gameData.player.isCultivating = false;
+            }
+            
+            // 显示开始界面
+            elements.gameScreen.classList.add('hidden');
+            elements.startScreen.classList.remove('hidden');
+            
+            // 检查是否有存档
+            checkSaveGame();
+        }
+
+        // 初始化游戏
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
